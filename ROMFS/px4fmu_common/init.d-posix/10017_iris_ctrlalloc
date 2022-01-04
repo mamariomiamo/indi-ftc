@@ -46,6 +46,8 @@ then
 	param set CA_MC_R3_PY 0.1875
 	param set CA_MC_R3_CT 6.5
 	param set CA_MC_R3_KM -0.05
+	param set MPC_FTC_KX 5
+	param set MPC_FTC_KY 5
 
 fi
 

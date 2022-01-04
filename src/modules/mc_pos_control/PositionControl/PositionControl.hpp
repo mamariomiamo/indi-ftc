@@ -40,6 +40,7 @@
 #pragma once
 
 #include <matrix/matrix/math.hpp>
+#include <matrix/Matrix.hpp>
 #include <uORB/topics/vehicle_attitude_setpoint.h>
 #include <uORB/topics/vehicle_constraints.h>
 #include <uORB/topics/vehicle_local_position_setpoint.h>
@@ -77,6 +78,12 @@ public:
 
 	PositionControl() = default;
 	~PositionControl() = default;
+
+	/**
+	 * Set the ftc control gains
+	 * @param K 3D vector of proportional gains for x,y axis
+	 */
+	void setFTCGains(const matrix::Vector2f &K) { _gain_ftc = K; }
 
 	/**
 	 * Set the position control gains
@@ -179,11 +186,15 @@ public:
 	 */
 	void getAttitudeSetpoint(vehicle_attitude_setpoint_s &attitude_setpoint) const;
 
+	void getDesiredVect(matrix::Vector3f &n_desired_inertia) const;
+
 private:
 	bool _updateSuccessful();
 
 	void _positionControl(); ///< Position proportional control
 	void _velocityControl(const float dt); ///< Velocity PID control
+	void getAccelerationSetpointFTC(const float dt); ///< Compute acceleration setpoint for FTC
+	
 	void _accelerationControl(); ///< Acceleration setpoint processing
 
 	// Gains
@@ -191,6 +202,7 @@ private:
 	matrix::Vector3f _gain_vel_p; ///< Velocity control proportional gain
 	matrix::Vector3f _gain_vel_i; ///< Velocity control integral gain
 	matrix::Vector3f _gain_vel_d; ///< Velocity control derivative gain
+	matrix::Vector2f _gain_ftc; //FTC gains
 
 	// Limits
 	float _lim_vel_horizontal{}; ///< Horizontal velocity limit with feed forward and position control
@@ -216,6 +228,9 @@ private:
 	matrix::Vector3f _vel_sp; /**< desired velocity */
 	matrix::Vector3f _acc_sp; /**< desired acceleration */
 	matrix::Vector3f _thr_sp; /**< desired thrust */
+	matrix::Vector3f _acc_desired_ftc; /**< desired acceleration for FTC */
+	matrix::Vector3f _n_desired; /**< corresponds to equation 11 desired force vector in NED inertia frame*/
+	matrix::Dcmf _R_att; // rotation matrix
 	float _yaw_sp{}; /**< desired heading */
 	float _yawspeed_sp{}; /** desired yaw-speed */
 };

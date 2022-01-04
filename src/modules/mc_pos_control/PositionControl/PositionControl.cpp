@@ -94,15 +94,18 @@ void PositionControl::setConstraints(const vehicle_constraints_s &constraints)
 
 	// For safety check if adjustable constraints are below global constraints. If they are not stricter than global
 	// constraints, then just use global constraints for the limits.
-	if (!PX4_ISFINITE(constraints.tilt) || (constraints.tilt > _lim_tilt)) {
+	if (!PX4_ISFINITE(constraints.tilt) || (constraints.tilt > _lim_tilt))
+	{
 		_constraints.tilt = _lim_tilt;
 	}
 
-	if (!PX4_ISFINITE(constraints.speed_up) || (constraints.speed_up > _lim_vel_up)) {
+	if (!PX4_ISFINITE(constraints.speed_up) || (constraints.speed_up > _lim_vel_up))
+	{
 		_constraints.speed_up = _lim_vel_up;
 	}
 
-	if (!PX4_ISFINITE(constraints.speed_down) || (constraints.speed_down > _lim_vel_down)) {
+	if (!PX4_ISFINITE(constraints.speed_down) || (constraints.speed_down > _lim_vel_down))
+	{
 		_constraints.speed_down = _lim_vel_down;
 	}
 
@@ -112,11 +115,10 @@ void PositionControl::setConstraints(const vehicle_constraints_s &constraints)
 bool PositionControl::update(const float dt)
 {
 	// x and y input setpoints always have to come in pairs
-	const bool valid = (PX4_ISFINITE(_pos_sp(0)) == PX4_ISFINITE(_pos_sp(1)))
-			   && (PX4_ISFINITE(_vel_sp(0)) == PX4_ISFINITE(_vel_sp(1)))
-			   && (PX4_ISFINITE(_acc_sp(0)) == PX4_ISFINITE(_acc_sp(1)));
+	const bool valid = (PX4_ISFINITE(_pos_sp(0)) == PX4_ISFINITE(_pos_sp(1))) && (PX4_ISFINITE(_vel_sp(0)) == PX4_ISFINITE(_vel_sp(1))) && (PX4_ISFINITE(_acc_sp(0)) == PX4_ISFINITE(_acc_sp(1)));
 
 	_positionControl();
+	getAccelerationSetpointFTC(dt);
 	_velocityControl(dt);
 
 	_yawspeed_sp = PX4_ISFINITE(_yawspeed_sp) ? _yawspeed_sp : 0.f;
@@ -141,6 +143,19 @@ void PositionControl::_positionControl()
 	_vel_sp(2) = math::constrain(_vel_sp(2), -_constraints.speed_up, _constraints.speed_down);
 }
 
+void PositionControl::getAccelerationSetpointFTC(const float dt) // FTC: calculate desired acceleration vector
+{
+	// PID velocity control
+	Vector3f vel_error = _vel_sp - _vel;
+	Vector3f acc_sp_velocity = vel_error.emult(_gain_vel_p) + _vel_int - _vel_dot.emult(_gain_vel_d);
+	_acc_desired_ftc = acc_sp_velocity;
+}
+
+void PositionControl::getDesiredVect(Vector3f &n_desired_inertia) const
+{
+	n_desired_inertia = (_acc_desired_ftc - Vector3f(0,0,CONSTANTS_ONE_G)).normalized();
+}
+
 void PositionControl::_velocityControl(const float dt)
 {
 	// PID velocity control
@@ -154,7 +169,8 @@ void PositionControl::_velocityControl(const float dt)
 
 	// Integrator anti-windup in vertical direction
 	if ((_thr_sp(2) >= -_lim_thr_min && vel_error(2) >= 0.0f) ||
-	    (_thr_sp(2) <= -_lim_thr_max && vel_error(2) <= 0.0f)) {
+		(_thr_sp(2) <= -_lim_thr_max && vel_error(2) <= 0.0f))
+	{
 		vel_error(2) = 0.f;
 	}
 
@@ -170,7 +186,8 @@ void PositionControl::_velocityControl(const float dt)
 	const Vector2f thrust_sp_xy(_thr_sp);
 	const float thrust_sp_xy_norm = thrust_sp_xy.norm();
 
-	if (thrust_sp_xy_norm > thrust_max_xy) {
+	if (thrust_sp_xy_norm > thrust_max_xy)
+	{
 		_thr_sp.xy() = thrust_sp_xy / thrust_sp_xy_norm * thrust_max_xy;
 	}
 
@@ -207,12 +224,15 @@ bool PositionControl::_updateSuccessful()
 	bool valid = true;
 
 	// For each controlled state the estimate has to be valid
-	for (int i = 0; i <= 2; i++) {
-		if (PX4_ISFINITE(_pos_sp(i))) {
+	for (int i = 0; i <= 2; i++)
+	{
+		if (PX4_ISFINITE(_pos_sp(i)))
+		{
 			valid = valid && PX4_ISFINITE(_pos(i));
 		}
 
-		if (PX4_ISFINITE(_vel_sp(i))) {
+		if (PX4_ISFINITE(_vel_sp(i)))
+		{
 			valid = valid && PX4_ISFINITE(_vel(i)) && PX4_ISFINITE(_vel_dot(i));
 		}
 	}

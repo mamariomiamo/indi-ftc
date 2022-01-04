@@ -171,6 +171,7 @@ AngularVelocityController::Run()
 			_angular_velocity_sp(0) = vehicle_rates_setpoint.roll;
 			_angular_velocity_sp(1) = vehicle_rates_setpoint.pitch;
 			_angular_velocity_sp(2) = vehicle_rates_setpoint.yaw;
+			//printf("yaw rate setpoint is %f\n",double(_angular_velocity_sp(2)));
 			_thrust_sp = Vector3f(vehicle_rates_setpoint.thrust_body);
 
 			// Scale _thrust_sp in Newton, assuming _hover_thrust is equivalent to 1G

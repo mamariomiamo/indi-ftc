@@ -763,3 +763,23 @@ PARAM_DEFINE_FLOAT(MPC_SPOOLUP_TIME, 1.0f);
  * @group Mission
  */
 PARAM_DEFINE_INT32(MPC_YAW_MODE, 0);
+
+/**
+ * FTC gain for rollrate
+ *
+ * @min 0.0
+ * @max 20.0
+ * @decimal 2
+ * @group Multicopter Position Control
+ */
+PARAM_DEFINE_FLOAT(MPC_FTC_KX, 5f);
+
+/**
+ * FTC gain for pitchrate
+ *
+ * @min 0.0
+ * @max 20.0
+ * @decimal 2
+ * @group Multicopter Position Control
+ */
+PARAM_DEFINE_FLOAT(MPC_FTC_KY, 5f);
